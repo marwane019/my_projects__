@@ -1,0 +1,36 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>SpaceX Next Launch</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>API</div></div></header>
+<section class='container prose'>
+  <h2>SpaceX Next Launch</h2>
+  <p><strong>What you see:</strong> a card with next mission name, planned UTC time, notes, and a live countdown.</p>
+  <p><strong>How to use:</strong> just open the page; it auto-loads; timer updates live.</p>
+  <div class='center'><img src='../../assets/images/preview_spx.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div id='out' class='prose'>Loading...</div>
+  <h3>Notes</h3>
+  <ul><li>Uses public SpaceX API</li><li>Shows info quickly</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+async function getJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();}
+let t0=null;
+async function load(){
+  const out=document.getElementById('out'); out.textContent='Loading...';
+  try{
+    const next=await getJSON('https://api.spacexdata.com/v4/launches/next');
+    t0=new Date(next.date_utc).getTime();
+    out.innerHTML = '<p><strong>'+next.name+'</strong></p><p><small class="mono">'+next.date_utc+'</small></p><p>'+(next.details||'')+'</p><p id="cd" class="kpi"></p>';
+  }catch(e){ out.textContent='Failed to fetch. Try again later.'; }
+}
+function tick(){
+  if(!t0){ requestAnimationFrame(tick); return; }
+  const now=Date.now(); var d=Math.max(0,Math.floor((t0-now)/1000));
+  const h=Math.floor(d/3600); d%=3600; const m=Math.floor(d/60); const s=d%60;
+  const cd=document.getElementById('cd'); if(cd) cd.textContent = 'T- '+h+'h '+m+'m '+s+'s';
+  requestAnimationFrame(tick);
+}
+load(); tick();
+</script>
+</body></html>

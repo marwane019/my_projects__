@@ -1,0 +1,45 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Open-Meteo Chart</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>API</div></div></header>
+<section class='container prose'>
+  <h2>Open-Meteo Chart</h2>
+  <p><strong>What you see:</strong> a line chart of temperatures for the next ~48 hours (auto-loads London).</p>
+  <p><strong>How to use:</strong> change lat/lon; click Plot to redraw.</p>
+  <div class='center'><img src='../../assets/images/preview_meteo.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='center'><canvas id='chart' width='900' height='360' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Public and fast</li><li>Autoload shows a chart immediately</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+function makeControls(){
+  const wrap=document.createElement('div'); wrap.className='controls';
+  wrap.innerHTML = [
+    "Lat <input id='lat' type='number' step='0.01' value='51.51'>",
+    "Lon <input id='lon' type='number' step='0.01' value='-0.13'>",
+    "<button class='btn' id='load'>Plot</button>"
+  ].join(" ");
+  document.querySelector('.prose').insertBefore(wrap, document.querySelector('.prose').children[4]);
+}
+makeControls();
+async function getJSON(url){ const r=await fetch(url); if(!r.ok) throw new Error('HTTP '+r.status); return r.json();}
+async function plot(){
+  const lat=+document.getElementById('lat').value, lon=+document.getElementById('lon').value;
+  const url='https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&hourly=temperature_2m&forecast_days=2';
+  const cv=document.getElementById('chart'), ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+  try{
+    const j=await getJSON(url); const ys=j.hourly.temperature_2m;
+    const pad=50,w=cv.width-2*pad,h=cv.height-2*pad; ctx.strokeStyle='#1a2240'; ctx.strokeRect(pad,pad,w,h);
+    const ymin=Math.min.apply(null,ys)-1, ymax=Math.max.apply(null,ys)+1;
+    const lx=function(i){return pad+i/(ys.length-1)*w}; const ly=function(v){return pad+(1-(v-ymin)/(ymax-ymin))*h};
+    ctx.beginPath(); ctx.strokeStyle='#5ea0ff'; ctx.lineWidth=2;
+    for(var i=0;i<ys.length;i++){var x=lx(i), y=ly(ys[i]); if(i==0) ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();
+  }catch(e){
+    const msg='Failed to fetch. Try again.'; ctx.fillStyle='#cfe1ff'; ctx.fillText(msg, 60, 60);
+  }
+}
+document.getElementById('load').onclick=plot; plot();
+</script>
+</body></html>

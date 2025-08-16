@@ -1,0 +1,21 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>CMB Spectrum</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Canvas</div></div></header>
+<section class='container prose'>
+  <h2>CMB Spectrum</h2>
+  <p><strong>What you see:</strong> a blue curve that changes shape when sliders move.</p>
+  <p><strong>How to use:</strong> move any slider; the curve redraws; click CSV to download numbers.</p>
+  <div class='center'><img src='../../assets/images/preview_cmb.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  <div class='controls'><label>lmax <input id='lmax' type='range' min='200' max='2500' value='1500'></label><label>As <input id='As' type='range' min='1.0e-9' max='4.0e-9' step='1.0e-10' value='2.1e-9'></label><label>ns <input id='ns' type='range' min='0.8' max='1.2' step='0.005' value='0.965'></label><button class='btn' id='reset'>Reset</button><button class='btn' id='csv'>CSV</button></div>
+  <div class='center'><canvas id='plot' width='900' height='440' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Log axes; tiny math toy</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>const cv=document.getElementById('plot'),ctx=cv.getContext('2d');const lmaxEl=document.getElementById('lmax'), AsEl=document.getElementById('As'), nsEl=document.getElementById('ns');document.getElementById('reset').onclick=()=>{lmaxEl.value=1500;AsEl.value=2.1e-9;nsEl.value=0.965;draw()};
+function cl(ell,As,ns){return As*Math.pow(Math.max(ell,1), ns-3.0)}function compute(){const lmax=+lmaxEl.value, As=+AsEl.value, ns=+nsEl.value;const ell=Array.from({length:lmax-1},(_,i)=>i+2);const Dl=ell.map(l=> l*(l+1)*cl(l,As,ns)/(2*Math.PI));return {ell,Dl}}
+function draw(){const o=compute(),ell=o.ell,Dl=o.Dl;ctx.clearRect(0,0,cv.width,cv.height);const pad=50,w=cv.width-2*pad,h=cv.height-2*pad;ctx.strokeStyle='#1a2240';ctx.strokeRect(pad,pad,w,h);const xmin=ell[0],xmax=ell[ell.length-1];const vals=Dl.filter(x=>x>0);const ymin=Math.min.apply(null,vals)*0.9, ymax=Math.max.apply(null,vals)*1.2;const lx=function(x){return pad+(Math.log(x)-Math.log(xmin))/(Math.log(xmax)-Math.log(xmin))*w};const ly=function(y){return pad+(1-(Math.log(y)-Math.log(ymin))/(Math.log(ymax)-Math.log(ymin)))*h};ctx.beginPath();ctx.strokeStyle='#5ea0ff';ctx.lineWidth=2;for(var i=0;i<ell.length;i++){var x=lx(ell[i]),y=ly(Dl[i]); if(i===0)ctx.moveTo(x,y); else ctx.lineTo(x,y);} ctx.stroke();}
+[lmaxEl,AsEl,nsEl].forEach(function(el){el.addEventListener('input',draw)}); draw();
+document.getElementById('csv').onclick=function(){const o=compute(),ell=o.ell,Dl=o.Dl;var csv='ell,Dl\n';for(var i=0;i<ell.length;i++) csv+=ell[i]+','+Dl[i]+'\n';const blob=new Blob([csv],{type:'text/csv'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='cmb_spectrum.csv';a.click();URL.revokeObjectURL(url);};</script>
+</body></html>

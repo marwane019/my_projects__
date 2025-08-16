@@ -1,0 +1,55 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Solar System Orrery</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Canvas</div></div></header>
+<section class='container prose'>
+  <h2>Solar System Orrery</h2>
+  <p><strong>What you see:</strong> a top-down mini solar system animation with orbits and labels.</p>
+  <p><strong>How to use:</strong> use the speed slider; toggle trails; hover a planet to reveal its name.</p>
+  <div class='center'><img src='../../assets/images/preview_orrery.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='center'><canvas id='orr' width='900' height='520' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Scaled for clarity, not real scale</li><li>Trails make pleasing orbits</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+const cv=document.getElementById('orr'), ctx=cv.getContext('2d');
+function makeControls(){
+  const wrap=document.createElement('div'); wrap.className='controls';
+  wrap.innerHTML = [
+    "Speed <input id='spd' type='range' min='0' max='3' step='0.05' value='1.2'>",
+    "<label><input id='trails' type='checkbox' checked> Trails</label>"
+  ].map(s=> s.startsWith('Speed')? "<label>"+s+"</label>": s ).join("");
+  document.querySelector('.prose').insertBefore(wrap, document.querySelector('.prose').children[4]);
+}
+makeControls();
+const spd=document.getElementById('spd'), trails=document.getElementById('trails');
+const planets=[
+  {name:'Mercury', r:40, size:3, period:88},
+  {name:'Venus',   r:70, size:5, period:225},
+  {name:'Earth',   r:100,size:5, period:365},
+  {name:'Mars',    r:130,size:4, period:687},
+  {name:'Jupiter', r:170,size:8, period:4333},
+  {name:'Saturn',  r:210,size:7, period:10759}
+];
+let t=0; cv.addEventListener('mousemove', e=>{const r=cv.getBoundingClientRect(); mx=e.clientX-r.left; my=e.clientY-r.top;}); let mx=-1,my=-1;
+function step(){ t += (+spd.value)*0.5; }
+function draw(){
+  if(!trails.checked){ ctx.clearRect(0,0,cv.width,cv.height); } else { ctx.fillStyle='rgba(10,15,26,0.15)'; ctx.fillRect(0,0,cv.width,cv.height); }
+  ctx.save(); ctx.translate(cv.width/2, cv.height/2);
+  ctx.fillStyle='#ffd26a'; ctx.beginPath(); ctx.arc(0,0,12,0,6.283); ctx.fill();
+  planets.forEach(p=>{
+    ctx.strokeStyle='#1a2240'; ctx.beginPath(); ctx.arc(0,0,p.r,0,6.283); ctx.stroke();
+    const ang = (t/p.period)*6.283;
+    const x = Math.cos(ang)*p.r, y=Math.sin(ang)*p.r;
+    const hovered = Math.hypot((cv.width/2+x)-mx,(cv.height/2+y)-my) < (p.size+6);
+    ctx.fillStyle = hovered? '#8fd0ff':'#5ea0ff';
+    ctx.beginPath(); ctx.arc(x,y,p.size,0,6.283); ctx.fill();
+    if(hovered){ ctx.fillStyle='#cfe1ff'; ctx.fillText(p.name, x+8,y-8); }
+  });
+  ctx.restore();
+}
+function loop(){ step(); draw(); requestAnimationFrame(loop); } loop();
+</script>
+</body></html>

@@ -1,0 +1,36 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Edge Detection</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Image</div></div></header>
+<section class='container prose'>
+  <h2>Edge Detection</h2>
+  <p><strong>What you see:</strong> two panels: left shows original image; right shows detected edges.</p>
+  <p><strong>How to use:</strong> click Process; or upload your own image then Process.</p>
+  <div class='center'><img src='../../assets/images/preview_edge.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='controls'><input type='file' id='file'><button class='btn' id='run'>Process</button></div><div class='center'><canvas id='in' width='360' height='240' class='img-frame' style='margin-right:8px'></canvas><canvas id='out' width='360' height='240' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Works offline; fast visual result</li><li>Upload optional</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+const cin=document.getElementById('in'), cout=document.getElementById('out'), ctxIn=cin.getContext('2d'), ctxOut=cout.getContext('2d');
+const img=new Image(); img.onload=()=>{ ctxIn.drawImage(img,0,0,cin.width,cin.height) }; img.src='../../assets/images/sample_edges.png';
+document.getElementById('file').onchange=function(ev){ const f=ev.target.files[0]; if(!f) return; const reader=new FileReader(); reader.onload=function(){ const im=new Image(); im.onload=function(){ ctxIn.clearRect(0,0,cin.width,cin.height); ctxIn.drawImage(im,0,0,cin.width,cin.height); }; im.src=reader.result; }; reader.readAsDataURL(f); };
+document.getElementById('run').onclick=function(){
+  const src=ctxIn.getImageData(0,0,cin.width,cin.height); const dst=ctxOut.createImageData(src.width,src.height);
+  function gray(i){return 0.299*src.data[i]+0.587*src.data[i+1]+0.114*src.data[i+2]}
+  const w=src.width,h=src.height;
+  for(let y=1;y<h-1;y++){
+    for(let x=1;x<w-1;x++){
+      const i=(y*w+x)*4;
+      const gx = -gray(i-4-w*4)-2*gray(i-w*4)-gray(i+4-w*4) + gray(i-4+w*4)+2*gray(i+w*4)+gray(i+4+w*4);
+      const gy = -gray(i-4-w*4)-2*gray(i-4)+-gray(i-4+w*4) + gray(i+4-w*4)+2*gray(i+4)+gray(i+4+w*4);
+      const g = Math.min(255, Math.sqrt(gx*gx + gy*gy));
+      dst.data[i]=dst.data[i+1]=dst.data[i+2]=g; dst.data[i+3]=255;
+    }
+  }
+  ctxOut.putImageData(dst,0,0);
+};
+</script>
+</body></html>

@@ -1,0 +1,51 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Nebula Noise</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Canvas</div></div></header>
+<section class='container prose'>
+  <h2>Nebula Noise</h2>
+  <p><strong>What you see:</strong> a slow-moving space cloud background that shifts like a nebula.</p>
+  <p><strong>How to use:</strong> use the palette slider to change color; speed to control motion.</p>
+  <div class='center'><img src='../../assets/images/preview_nebula.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='center'><canvas id='neb' width='900' height='520' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>No API or assets; always works</li><li>Good animated background</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+const cv=document.getElementById('neb'), ctx=cv.getContext('2d');
+function makeControls(){
+  const wrap=document.createElement('div'); wrap.className='controls';
+  wrap.innerHTML = [
+    "Palette <input id='pal' type='range' min='0' max='4' value='2'>",
+    "Speed <input id='spd' type='range' min='1' max='10' value='3'>"
+  ].map(s=>"<label>"+s+"</label>").join("");
+  document.querySelector('.prose').insertBefore(wrap, document.querySelector('.prose').children[4]);
+}
+makeControls();
+const pal=document.getElementById('pal'), spd=document.getElementById('spd');
+const w=cv.width,h=cv.height; const img=ctx.createImageData(w,h);
+function noise2d(x,y,t){ const n=Math.sin(x*0.015 + Math.sin(y*0.02+ t)*2.0 + t*0.3) + Math.cos(y*0.013 + t*0.7) * 0.5; return (n+2.0)/3.0; }
+let t=0;
+function draw(){
+  t += (+spd.value)*0.01;
+  const mode=+pal.value|0;
+  for(let y=0;y<h;y++){
+    for(let x=0;x<w;x++){
+      const n=noise2d(x,y,t);
+      let r,g,b;
+      if(mode===0){ r=20+120*n; g=40+80*n; b=120+130*n; }
+      if(mode===1){ r=140+80*n; g=20+60*n; b=120+90*n; }
+      if(mode===2){ r=30+60*n; g=120+100*n; b=200+40*n; }
+      if(mode===3){ r=180+50*n; g=120+40*n; b=20+30*n; }
+      if(mode===4){ r=220*n; g=220*(1-n); b=220; }
+      const i=(y*w+x)*4; img.data[i]=r|0; img.data[i+1]=g|0; img.data[i+2]=b|0; img.data[i+3]=255;
+    }
+  }
+  ctx.putImageData(img,0,0);
+  requestAnimationFrame(draw);
+}
+draw();
+</script>
+</body></html>

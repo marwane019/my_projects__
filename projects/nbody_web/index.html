@@ -1,0 +1,23 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>N-Body Simulation</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Physics</div></div></header>
+<section class='container prose'>
+  <h2>N-Body Simulation</h2>
+  <p><strong>What you see:</strong> moving dots that orbit each other; trails draw motion lines; badges show FPS and energy.</p>
+  <p><strong>How to use:</strong> change particle count and dt; toggle trails; press Restart to re-seed.</p>
+  <div class='center'><img src='../../assets/images/preview_nbody.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  <div class='controls'><label>Particles <input id='n' type='range' min='20' max='200' value='100'></label><label>dt <input id='dt' type='range' min='1' max='20' value='8'></label><label><input type='checkbox' id='trails' checked> Trails</label><button class='btn' id='restart'>Restart</button><span class='kpi'>Energy: <span id='kE'>0</span></span><span class='kpi'>FPS: <span id='kFPS'>0</span></span></div>
+  <div class='center'><canvas id='space' width='800' height='520' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Lower dt = calmer; more particles = richer trails</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>const cv=document.getElementById('space'), ctx=cv.getContext('2d');let N=80, dt=0.008, trails=true;let pos=[], vel=[], mass=[];const SOFT=1e-2, G=1.0; const kE=document.getElementById('kE'), kFPS=document.getElementById('kFPS');
+function rnd(a,b){return Math.random()*(b-a)+a}
+function init(){N=+document.getElementById('n').value;dt=(+document.getElementById('dt').value)/1000;trails=document.getElementById('trails').checked;pos=[]; vel=[]; mass=[];for(let i=0;i<N;i++){pos.push({x:rnd(-1,1), y:rnd(-1,1)});vel.push({x:rnd(-0.2,0.2), y:rnd(-0.2,0.2)});mass.push(rnd(0.5,2.0));}}
+function energy(){let ke=0, pe=0;for(let i=0;i<N;i++){ke += 0.5*(vel[i].x*vel[i].x + vel[i].y*vel[i].y)*mass[i];for(let j=i+1;j<N;j++){const dx=pos[j].x-pos[i].x, dy=pos[j].y-pos[i].y;const r=Math.hypot(dx,dy)+SOFT;pe -= G*mass[i]*mass[j]/r;}}return (ke+pe)/N;}
+function step(){const ax=new Array(N).fill(0), ay=new Array(N).fill(0);for(let i=0;i<N;i++){for(let j=0;j<N;j++){ if(i===j) continue;const dx=pos[j].x-pos[i].x, dy=pos[j].y-pos[i].y;const r2=dx*dx+dy*dy+SOFT*SOFT; const inv=1.0/(r2*Math.sqrt(r2));ax[i]+=G*mass[j]*dx*inv; ay[i]+=G*mass[j]*dy*inv;}}for(let i=0;i<N;i++){vel[i].x+=0.5*dt*ax[i]; vel[i].y+=0.5*dt*ay[i];pos[i].x+=dt*vel[i].x; pos[i].y+=dt*vel[i].y;}for(let i=0;i<N;i++){ax[i]=0; ay[i]=0;for(let j=0;j<N;j++){ if(i===j) continue;const dx=pos[j].x-pos[i].x, dy=pos[j].y-pos[i].y;const r2=dx*dx+dy*dy+SOFT*SOFT; const inv=1.0/(r2*Math.sqrt(r2));ax[i]+=G*mass[j]*dx*inv; ay[i]+=G*mass[j]*dy*inv;}vel[i].x+=0.5*dt*ax[i]; vel[i].y+=0.5*dt*ay[i];}}
+function draw(){if(!trails){ ctx.clearRect(0,0,cv.width,cv.height); } else { ctx.fillStyle='rgba(10,15,26,0.25)'; ctx.fillRect(0,0,cv.width,cv.height); } ctx.save(); ctx.translate(cv.width/2, cv.height/2); ctx.scale(180,180); ctx.fillStyle='#5ea0ff'; for(let i=0;i<N;i++){ ctx.beginPath(); ctx.arc(pos[i].x, pos[i].y, 0.01, 0, 6.283); ctx.fill(); } ctx.restore();}
+let lastTime=performance.now(), frames=0;function loop(){frames++; const now=performance.now(); if(now-lastTime>=1000){ kFPS.textContent=frames; frames=0; lastTime=now; } step(); draw(); kE.textContent=energy().toFixed(3); requestAnimationFrame(loop);}document.getElementById('restart').onclick=()=>{init(); ctx.clearRect(0,0,cv.width,cv.height)};document.getElementById('n').oninput=()=>{init()}; document.getElementById('dt').oninput=()=>{init()};document.getElementById('trails').onchange=()=>{trails=document.getElementById('trails').checked};init(); loop();</script>
+</body></html>

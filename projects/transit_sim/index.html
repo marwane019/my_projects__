@@ -1,0 +1,41 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Transit Lightcurve</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Astro Viz</div></div></header>
+<section class='container prose'>
+  <h2>Transit Lightcurve</h2>
+  <p><strong>What you see:</strong> a flat line with a clear dip in the middle (that dip is the transit).</p>
+  <p><strong>How to use:</strong> move planet size to change dip depth; move duration to widen/narrow the dip.</p>
+  <div class='center'><img src='../../assets/images/preview_transit.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='center'><canvas id='lc' width='900' height='360' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Bigger planet = deeper dip</li><li>Duration widens the dip</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+const cv=document.getElementById('lc'), ctx=cv.getContext('2d'); 
+function makeControls(){
+  const wrap=document.createElement('div'); wrap.className='controls';
+  wrap.innerHTML = [
+    "Planet radius (Rp/Rs) <input id='rp' type='range' min='0.01' max='0.2' step='0.005' value='0.1'>",
+    "Duration (hours) <input id='dur' type='range' min='1' max='12' step='0.5' value='6'>"
+  ].map(s=>"<label>"+s+"</label>").join("");
+  document.querySelector('.prose').insertBefore(wrap, document.querySelector('.prose').children[4]);
+}
+makeControls();
+const rp=document.getElementById('rp'), dur=document.getElementById('dur');
+function draw(){
+  const depth = Math.pow(+rp.value,2), duration = +dur.value;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  const pad=50,w=cv.width-2*pad,h=cv.height-2*pad;
+  ctx.strokeStyle='#1a2240'; ctx.strokeRect(pad,pad,w,h);
+  const y1 = pad + (1-1.0)*h; ctx.strokeStyle='#4f6fb2'; ctx.beginPath(); ctx.moveTo(pad,y1); ctx.lineTo(pad+w,y1); ctx.stroke();
+  const dip = 1.0 - depth, x0 = pad + w*0.35, x1 = pad + w*0.65, y0 = pad + (1-dip)*h;
+  ctx.fillStyle='#5ea0ff'; ctx.fillRect(x0,y0,(x1-x0), (pad+h - y0));
+  ctx.fillStyle='#cfe1ff'; ctx.fillText('Depth ~ '+(depth*100).toFixed(2)+'%', pad+10, pad+18);
+  ctx.fillText('Duration ~ '+duration+' h', pad+10, pad+34);
+}
+[rp,dur].forEach(e=>e.addEventListener('input',draw)); draw();
+</script>
+</body></html>

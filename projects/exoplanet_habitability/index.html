@@ -1,0 +1,56 @@
+<!doctype html><html lang='en'><head>
+<meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<title>Exoplanet Habitability</title><link rel='stylesheet' href='../../assets/css/style.css'></head><body>
+<header class='nav'><div class='container'><a class='brand' href='../../index.html'><- Back</a><div class='badge'>Astro Model</div></div></header>
+<section class='container prose'>
+  <h2>Exoplanet Habitability</h2>
+  <p><strong>What you see:</strong> a star and planet view with simple numbers on temp, gravity, and a score.</p>
+  <p><strong>How to use:</strong> move the sliders for star mass, distance, planet size/mass, albedo, greenhouse; watch the badges update.</p>
+  <div class='center'><img src='../../assets/images/preview_hab.png' alt='Preview' class='img-frame' style='max-width:100%;height:auto;margin-bottom:10px'></div>
+  
+  <div class='kpi'>Temp (C): <span id='kT'>0</span></div><div class='kpi'>g (m/s^2): <span id='kG'>0</span></div><div class='kpi'>Score (0-100): <span id='kS'>0</span></div><div class='center'><canvas id='planet' width='600' height='360' class='img-frame'></canvas></div>
+  <h3>Notes</h3>
+  <ul><li>Higher score = closer to Earth-like</li><li>Toy model</li></ul>
+</section>
+<footer><div class='container'>Contact: <a href='mailto:ambrosetheshield6@gmail.com'>ambrosetheshield6@gmail.com</a></div></footer>
+<script>
+const cv=document.getElementById('planet'), ctx=cv.getContext('2d');
+function makeControls(){
+  const wrap=document.createElement('div'); wrap.className='controls';
+  wrap.innerHTML = [
+    "Star mass (M_sun) <input id='mstar' type='range' min='0.1' max='2.0' step='0.01' value='1'>",
+    "Orbit dist (AU) <input id='dist' type='range' min='0.1' max='5.0' step='0.01' value='1'>",
+    "Planet radius (R_earth) <input id='r' type='range' min='0.5' max='2.5' step='0.01' value='1'>",
+    "Planet mass (M_earth) <input id='m' type='range' min='0.2' max='10' step='0.1' value='1'>",
+    "Albedo <input id='alb' type='range' min='0.0' max='0.9' step='0.01' value='0.3'>",
+    "Greenhouse (C) <input id='gh' type='range' min='0' max='80' step='1' value='15'>"
+  ].map(s=>"<label>"+s+"</label>").join("");
+  document.querySelector('.prose').insertBefore(wrap, document.querySelector('.prose').children[4]);
+}
+makeControls();
+const kT=document.getElementById('kT'), kG=document.getElementById('kG'), kS=document.getElementById('kS');
+function compute(){
+  const M=+mstar.value, d=+dist.value, R=+r.value, Mp=+m.value, A=+alb.value, GH=+gh.value;
+  const L=Math.pow(M,3.5);
+  const Teq = Math.pow((L*(1-A))/(16*Math.PI*Math.pow(d,2)*5.67e-8),0.25)-273.15;
+  const T=Teq+GH;
+  const g=9.80665*(Mp/Math.pow(R,2));
+  const tScore = Math.max(0,100- Math.abs(T-22)*3);
+  const gScore = Math.max(0,100- Math.abs(g-9.8)*6);
+  const score = Math.round(0.6*tScore + 0.4*gScore);
+  return {T:Math.round(T), g:Math.round(g*10)/10, score:score}
+}
+function draw(){
+  const c=compute(); kT.textContent=c.T; kG.textContent=c.g; kS.textContent=c.score;
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#0f1526'; ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.fillStyle='#ffd26a'; ctx.beginPath(); ctx.arc(80,180,40,0,6.283); ctx.fill();
+  ctx.strokeStyle='#1a2240'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(300,180,140,0,6.283); ctx.stroke();
+  ctx.fillStyle='#5ea0ff'; ctx.beginPath(); ctx.arc(300,180,24,0,6.283); ctx.fill();
+  ctx.fillStyle='#cfe1ff'; ctx.fillText('T ~ '+c.T+' C', 360, 160);
+  ctx.fillText('g ~ '+c.g+' m/s^2', 360, 180);
+  ctx.fillText('Score ~ '+c.score+'/100', 360, 200);
+}
+['mstar','dist','r','m','alb','gh'].forEach(id=>document.getElementById(id).addEventListener('input',draw)); draw();
+</script>
+</body></html>
